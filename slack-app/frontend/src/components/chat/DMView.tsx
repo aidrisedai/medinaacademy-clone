@@ -1,5 +1,4 @@
 import React from 'react'
-import { MessageSquareDot } from 'lucide-react'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
 import { Avatar } from '@/components/ui/Avatar'
@@ -22,8 +21,9 @@ export function DMView() {
     editMessage,
     deleteMessage,
     toggleReaction,
+    uploadFile,
     setTyping,
-  } = useMessages(currentDM?.id ?? null)
+  } = useMessages(currentDM?.id ?? null, { isDM: true })
 
   if (!currentDM) return null
 
@@ -33,14 +33,19 @@ export function DMView() {
   const emptyState = (
     <div className="text-center py-12 px-8 max-w-md">
       {otherUser && (
-        <Avatar src={otherUser.photoURL} name={otherUser.displayName} size="xl" className="mx-auto mb-4" />
+        <Avatar
+          src={otherUser.photoURL}
+          name={otherUser.displayName}
+          size="xl"
+          className="mx-auto mb-4"
+        />
       )}
       <h2 className="text-xl font-bold text-gray-900 mb-2">
         {otherUser?.displayName ?? 'Direct Message'}
       </h2>
       <p className="text-gray-500 text-sm">
-        This is the beginning of your direct message history with{' '}
-        <span className="font-semibold">{otherUser?.displayName}</span>.
+        This is the very beginning of your direct message history with{' '}
+        <span className="font-semibold">{otherUser?.displayName ?? 'this person'}</span>.
       </p>
     </div>
   )
@@ -50,17 +55,23 @@ export function DMView() {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white flex-shrink-0 shadow-sm">
         {otherUser && (
-          <Avatar src={otherUser.photoURL} name={otherUser.displayName} size="sm" status={otherUser.status} />
+          <Avatar
+            src={otherUser.photoURL}
+            name={otherUser.displayName}
+            size="sm"
+            status={otherUser.status}
+          />
         )}
         <div>
-          <h2 className="font-bold text-gray-900 text-sm">{otherUser?.displayName ?? 'Direct Message'}</h2>
+          <h2 className="font-bold text-gray-900 text-sm">
+            {otherUser?.displayName ?? 'Direct Message'}
+          </h2>
           {otherUser?.status && (
-            <p className="text-xs text-gray-500 capitalize">{otherUser.status}</p>
+            <p className="text-xs text-gray-400 capitalize">{otherUser.status}</p>
           )}
         </div>
       </div>
 
-      {/* Messages */}
       <MessageList
         messages={messages}
         loading={loading}
@@ -74,12 +85,12 @@ export function DMView() {
         emptyState={emptyState}
       />
 
-      {/* Input */}
       <div className="px-4 pb-4 pt-2 flex-shrink-0">
         <MessageInput
           placeholder={`Message ${otherUser?.displayName ?? ''}`}
           onSend={(text, attachments) => sendMessage(text, attachments)}
           onTyping={setTyping}
+          onUpload={uploadFile}
         />
       </div>
     </div>

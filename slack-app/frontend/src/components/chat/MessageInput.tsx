@@ -12,7 +12,8 @@ import {
   AtSign,
   Send,
   X,
-  Image,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react'
 import EmojiMartPicker from '@emoji-mart/react'
 import EmojiData from '@emoji-mart/data'
@@ -22,11 +23,19 @@ interface MessageInputProps {
   placeholder: string
   onSend: (text: string, attachments: Attachment[]) => void
   onTyping?: () => void
+  onUpload?: (file: File) => Promise<Attachment>
   disabled?: boolean
   autoFocus?: boolean
 }
 
-export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocus }: MessageInputProps) {
+export function MessageInput({
+  placeholder,
+  onSend,
+  onTyping,
+  onUpload,
+  disabled,
+  autoFocus,
+}: MessageInputProps) {
   const [text, setText] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [showEmoji, setShowEmoji] = useState(false)
@@ -64,7 +73,7 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
-  function insertFormatting(before: string, after: string = '') {
+  function insertFormatting(before: string, after = '') {
     const ta = textareaRef.current
     if (!ta) return
     const start = ta.selectionStart
@@ -87,25 +96,35 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
   async function handleFileSelect(files: FileList | null) {
     if (!files?.length) return
     setUploading(true)
-    // File upload handled by parent via uploadFile hook
-    // For now, simulate with base64 for images
+
+    const newAttachments: Attachment[] = []
+
     for (const file of Array.from(files)) {
-      if (file.type.startsWith('image/') && file.size < 5 * 1024 * 1024) {
-        const url = URL.createObjectURL(file)
-        setAttachments((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            type: 'image',
-            name: file.name,
-            url,
-            size: file.size,
-            mimeType: file.type,
-          },
-        ])
+      if (onUpload) {
+        // Real upload to Firebase Storage
+        try {
+          const att = await onUpload(file)
+          newAttachments.push(att)
+        } catch (err) {
+          console.error('Upload failed:', err)
+        }
+      } else {
+        // Fallback: local preview only (loses on reload, but OK for dev)
+        newAttachments.push({
+          id: crypto.randomUUID(),
+          type: file.type.startsWith('image/') ? 'image' : 'file',
+          name: file.name,
+          url: URL.createObjectURL(file),
+          size: file.size,
+          mimeType: file.type,
+        })
       }
     }
+
+    setAttachments((prev) => [...prev, ...newAttachments])
     setUploading(false)
+    // Reset file input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -114,7 +133,7 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
     handleFileSelect(e.dataTransfer.files)
   }
 
-  const canSend = (text.trim().length > 0 || attachments.length > 0) && !disabled
+  const canSend = (text.trim().length > 0 || attachments.length > 0) && !disabled && !uploading
 
   return (
     <div className="relative">
@@ -124,24 +143,28 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 bg-brand-50 border-2 border-dashed border-brand-DEFAULT rounded-xl flex items-center justify-center"
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onDragLeave={() => setIsDragging(false)}
+            className="absolute inset-0 z-10 bg-brand-50 border-2 border-dashed border-brand-DEFAULT rounded-xl flex items-center justify-center pointer-events-none"
           >
             <div className="text-center">
-              <Image size={32} className="text-brand-DEFAULT mx-auto mb-2" />
-              <p className="text-sm font-semibold text-brand-DEFAULT">Drop files to upload</p>
+              <ImageIcon size={28} className="text-brand-DEFAULT mx-auto mb-2" />
+              <p className="text-sm font-semibold text-brand-DEFAULT">Drop to upload</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div
-        className={`border-2 rounded-xl transition-all duration-150 ${
-          isDragging ? 'border-brand-DEFAULT' : 'border-gray-300 focus-within:border-brand-DEFAULT'
-        } bg-white shadow-sm`}
+        className={`border-2 rounded-xl transition-all duration-150 bg-white shadow-sm ${
+          isDragging
+            ? 'border-brand-DEFAULT'
+            : 'border-gray-300 focus-within:border-brand-DEFAULT'
+        }`}
         onDragEnter={() => setIsDragging(true)}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false)
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
       >
         {/* Formatting toolbar */}
         <div className="flex items-center gap-0.5 px-3 pt-2.5 pb-1 border-b border-gray-100">
@@ -182,24 +205,29 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
                     className="h-16 w-16 object-cover rounded-lg border border-gray-200"
                   />
                 ) : (
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 max-w-48">
                     <span className="text-lg">📎</span>
-                    <span className="text-xs text-gray-600 max-w-24 truncate">{att.name}</span>
+                    <span className="text-xs text-gray-600 truncate">{att.name}</span>
                   </div>
                 )}
                 <button
                   onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== att.id))}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                 >
                   <X size={10} />
                 </button>
               </div>
             ))}
+            {uploading && (
+              <div className="h-16 w-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
+                <Loader2 size={18} className="text-gray-400 animate-spin" />
+              </div>
+            )}
           </div>
         )}
 
-        {/* Text input */}
-        <div className="relative px-3 py-2">
+        {/* Text area */}
+        <div className="px-3 py-2">
           <textarea
             ref={textareaRef}
             value={text}
@@ -215,22 +243,23 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
         </div>
 
         {/* Bottom toolbar */}
-        <div className="flex items-center gap-1 px-3 py-2">
+        <div className="flex items-center gap-1 px-3 py-2 border-t border-gray-100">
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,.pdf,.doc,.docx,.txt,.csv,.zip"
             className="hidden"
             onChange={(e) => handleFileSelect(e.target.files)}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            disabled={uploading}
+            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-40"
             title="Attach files"
           >
-            <Paperclip size={16} />
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
           </button>
           <button
             type="button"
@@ -250,21 +279,19 @@ export function MessageInput({ placeholder, onSend, onTyping, disabled, autoFocu
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-1 text-xs text-gray-400">
-            <span>Shift+Enter for new line</span>
-          </div>
+          <span className="hidden sm:block text-xs text-gray-300 mr-2">Shift+Enter for new line</span>
 
           <motion.button
             type="button"
-            whileTap={{ scale: 0.92 }}
+            whileTap={{ scale: 0.9 }}
             onClick={handleSend}
             disabled={!canSend}
-            className={`ml-2 p-2 rounded-lg transition-all duration-150 ${
+            className={`p-2 rounded-lg transition-all duration-150 ${
               canSend
                 ? 'bg-brand-DEFAULT hover:bg-brand-700 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
             }`}
-            title="Send message (Enter)"
+            title="Send (Enter)"
           >
             <Send size={16} />
           </motion.button>

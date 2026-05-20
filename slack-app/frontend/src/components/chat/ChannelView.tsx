@@ -31,6 +31,7 @@ export function ChannelView() {
     editMessage,
     deleteMessage,
     toggleReaction,
+    uploadFile,
     setTyping,
   } = useMessages(currentChannel?.id ?? null)
   const { users } = useWorkspaceUsers()
@@ -140,6 +141,7 @@ export function ChannelView() {
             placeholder={`Message #${currentChannel.name}`}
             onSend={(text, attachments) => sendMessage(text, attachments)}
             onTyping={setTyping}
+            onUpload={uploadFile}
           />
         </div>
       </div>

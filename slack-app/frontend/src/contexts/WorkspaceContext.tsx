@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/config/firebase'
 import { useAuth } from './AuthContext'
+import { useUnread } from '@/hooks/useUnread'
 import type { Workspace, Channel, DirectMessage, Message } from '@/types'
 
 interface WorkspaceContextValue {
@@ -217,6 +218,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   function markChannelRead(channelId: string) {
     setUnreadCounts((prev) => ({ ...prev, [channelId]: 0 }))
   }
+
+  const handleUnread = useCallback((channelId: string) => {
+    setUnreadCounts((prev) => ({ ...prev, [channelId]: (prev[channelId] ?? 0) + 1 }))
+  }, [])
+
+  // Track unread counts whenever a new message arrives in a background channel
+  useUnread(channels, currentChannel?.id ?? null, handleUnread)
 
   const setCurrentChannel = useCallback((channel: Channel | null) => {
     setCurrentChannelState(channel)

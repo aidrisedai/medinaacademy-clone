@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { WithUserCard } from '@/components/ui/UserCard'
 import { useAuth } from '@/contexts/AuthContext'
 import { useWorkspace } from '@/contexts/WorkspaceContext'
 import type { Message as MessageType, User, Reaction } from '@/types'
@@ -89,7 +90,9 @@ export function Message({
         {/* Avatar or time */}
         <div className="w-9 flex-shrink-0 flex flex-col items-center">
           {showHeader ? (
-            <Avatar src={author?.photoURL} name={author?.displayName ?? 'User'} size="md" />
+            <WithUserCard user={author}>
+              <Avatar src={author?.photoURL} name={author?.displayName ?? 'User'} size="md" />
+            </WithUserCard>
           ) : (
             <span
               className={`text-2xs text-gray-400 transition-opacity mt-1 ${
@@ -105,10 +108,12 @@ export function Message({
         <div className="flex-1 min-w-0">
           {showHeader && (
             <div className="flex items-baseline gap-2 mb-0.5">
-              <span className="font-bold text-gray-900 text-sm hover:underline cursor-pointer">
-                {author?.displayName ?? 'Unknown'}
-              </span>
-              <span className="text-xs text-gray-400">{formatTime(createdAt)}</span>
+              <WithUserCard user={author}>
+                <span className="font-bold text-gray-900 text-sm hover:underline cursor-pointer">
+                  {author?.displayName ?? 'Unknown'}
+                </span>
+              </WithUserCard>
+              <span className="text-xs text-gray-400 leading-none">{formatTime(createdAt)}</span>
               {message.isPinned && (
                 <span className="flex items-center gap-0.5 text-2xs text-gray-400">
                   <Pin size={10} />

@@ -26,7 +26,8 @@ import type { Message, Reaction, Attachment } from '@/types'
 
 const PAGE_SIZE = 50
 
-export function useMessages(channelId: string | null) {
+/** Works for both channel IDs and DM IDs. Pass `isDM: true` for direct messages. */
+export function useMessages(channelId: string | null, opts: { isDM?: boolean } = {}) {
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,7 +58,6 @@ export function useMessages(channelId: string | null) {
       const msgs = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as Message))
         .reverse()
-
       lastDocRef.current = snap.docs[snap.docs.length - 1] ?? null
       setHasMore(snap.docs.length === PAGE_SIZE)
       setMessages(msgs)
@@ -67,7 +67,7 @@ export function useMessages(channelId: string | null) {
     return unsub
   }, [channelId])
 
-  // Subscribe to typing indicators
+  // Typing indicators
   useEffect(() => {
     if (!channelId) return
 
@@ -128,7 +128,6 @@ export function useMessages(channelId: string | null) {
       })
 
       if (parentId) {
-        // Use atomic increment to avoid race conditions
         await updateDoc(doc(db, 'messages', parentId), {
           replyCount: increment(1),
           replyUserIds: arrayUnion(user.uid),
@@ -136,9 +135,13 @@ export function useMessages(channelId: string | null) {
         })
       }
 
-      await updateDoc(doc(db, 'channels', channelId), { lastMessageAt: serverTimestamp() })
+      // Update lastMessageAt on the correct collection (channel or DM)
+      const coll = opts.isDM ? 'dms' : 'channels'
+      await updateDoc(doc(db, coll, channelId), { lastMessageAt: serverTimestamp() }).catch(() => {
+        // Silently ignore if doc doesn't exist (shouldn't happen in normal flow)
+      })
     },
-    [user, channelId]
+    [user, channelId, opts.isDM]
   )
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
@@ -159,7 +162,6 @@ export function useMessages(channelId: string | null) {
       if (!user) return
 
       const msgRef = doc(db, 'messages', messageId)
-      // Use getDoc (not getDocs with __name__ query which is unsupported)
       const msgSnap = await getDoc(msgRef)
       if (!msgSnap.exists()) return
 
@@ -171,9 +173,7 @@ export function useMessages(channelId: string | null) {
         if (existing.userIds.includes(user.uid)) {
           const updated = existing.userIds.filter((id) => id !== user.uid)
           if (updated.length === 0) {
-            await updateDoc(msgRef, {
-              reactions: reactions.filter((r) => r.emoji !== emoji),
-            })
+            await updateDoc(msgRef, { reactions: reactions.filter((r) => r.emoji !== emoji) })
           } else {
             await updateDoc(msgRef, {
               reactions: reactions.map((r) =>
@@ -203,7 +203,8 @@ export function useMessages(channelId: string | null) {
     async (file: File): Promise<Attachment> => {
       if (!user) throw new Error('Not authenticated')
 
-      const path = `attachments/${user.uid}/${Date.now()}_${file.name}`
+      const ext = file.name.split('.').pop() ?? ''
+      const path = `attachments/${user.uid}/${Date.now()}_${crypto.randomUUID()}.${ext}`
       const storageRef = ref(storage, path)
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
@@ -223,7 +224,6 @@ export function useMessages(channelId: string | null) {
   const setTyping = useCallback(async () => {
     if (!user || !channelId) return
 
-    // setDoc with merge ensures we always write to the user's UID document
     await setDoc(
       doc(db, 'typing', user.uid),
       { userId: user.uid, channelId, timestamp: serverTimestamp() },
@@ -232,11 +232,7 @@ export function useMessages(channelId: string | null) {
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
     typingTimeoutRef.current = setTimeout(async () => {
-      await setDoc(
-        doc(db, 'typing', user.uid),
-        { timestamp: new Date(0) },
-        { merge: true }
-      ).catch(() => {})
+      await setDoc(doc(db, 'typing', user.uid), { timestamp: new Date(0) }, { merge: true }).catch(() => {})
     }, 4000)
   }, [user, channelId])
 
