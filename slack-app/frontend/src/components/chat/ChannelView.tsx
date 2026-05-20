@@ -6,7 +6,6 @@ import {
   Bell,
   Users,
   Pin,
-  Settings,
   ChevronDown,
   Info,
   MessageSquare,
