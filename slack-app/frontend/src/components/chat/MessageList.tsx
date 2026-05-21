@@ -236,7 +236,7 @@ export function MessageList({
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.15 }}
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-brand-DEFAULT text-white text-xs font-semibold rounded-full shadow-lg hover:bg-brand-700 transition-colors"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-brand text-white text-xs font-semibold rounded-full shadow-lg hover:bg-brand-700 transition-colors"
           >
             <ArrowDown size={13} />
             Jump to latest

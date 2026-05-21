@@ -57,9 +57,9 @@ export function ChannelView() {
     <div className="text-center py-12 px-8 max-w-md">
       <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
         {currentChannel.isPrivate ? (
-          <Lock size={24} className="text-brand-DEFAULT" />
+          <Lock size={24} className="text-brand" />
         ) : (
-          <Hash size={24} className="text-brand-DEFAULT" />
+          <Hash size={24} className="text-brand" />
         )}
       </div>
       <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -100,7 +100,7 @@ export function ChannelView() {
             <button
               onClick={() => setShowMembers(!showMembers)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                showMembers ? 'bg-brand-50 text-brand-DEFAULT' : 'hover:bg-gray-100 text-gray-600'
+                showMembers ? 'bg-brand-50 text-brand' : 'hover:bg-gray-100 text-gray-600'
               }`}
             >
               <Users size={15} />

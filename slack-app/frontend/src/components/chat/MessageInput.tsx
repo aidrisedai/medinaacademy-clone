@@ -143,11 +143,11 @@ export function MessageInput({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 bg-brand-50 border-2 border-dashed border-brand-DEFAULT rounded-xl flex items-center justify-center pointer-events-none"
+            className="absolute inset-0 z-10 bg-brand-50 border-2 border-dashed border-brand rounded-xl flex items-center justify-center pointer-events-none"
           >
             <div className="text-center">
-              <ImageIcon size={28} className="text-brand-DEFAULT mx-auto mb-2" />
-              <p className="text-sm font-semibold text-brand-DEFAULT">Drop to upload</p>
+              <ImageIcon size={28} className="text-brand mx-auto mb-2" />
+              <p className="text-sm font-semibold text-brand">Drop to upload</p>
             </div>
           </motion.div>
         )}
@@ -156,8 +156,8 @@ export function MessageInput({
       <div
         className={`border-2 rounded-xl transition-all duration-150 bg-white shadow-sm ${
           isDragging
-            ? 'border-brand-DEFAULT'
-            : 'border-gray-300 focus-within:border-brand-DEFAULT'
+            ? 'border-brand'
+            : 'border-gray-300 focus-within:border-brand'
         }`}
         onDragEnter={() => setIsDragging(true)}
         onDragLeave={(e) => {
@@ -288,7 +288,7 @@ export function MessageInput({
             disabled={!canSend}
             className={`p-2 rounded-lg transition-all duration-150 ${
               canSend
-                ? 'bg-brand-DEFAULT hover:bg-brand-700 text-white shadow-sm'
+                ? 'bg-brand hover:bg-brand-700 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-300 cursor-not-allowed'
             }`}
             title="Send (Enter)"

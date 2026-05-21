@@ -20,9 +20,9 @@ searchRouter.get('/messages', requireAuth, async (req: AuthRequest, res) => {
 
     const snap = await dbQuery.orderBy('createdAt', 'desc').limit(200).get()
 
-    const results = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((m: { text?: string }) => m.text?.toLowerCase().includes(query))
+    type MsgDoc = { id: string; text?: string; [k: string]: unknown }
+    const results = (snap.docs.map((d) => ({ id: d.id, ...d.data() })) as MsgDoc[])
+      .filter((m) => m.text?.toLowerCase().includes(query))
       .slice(0, Number(limit))
 
     res.json(results)
@@ -44,11 +44,10 @@ searchRouter.get('/channels', requireAuth, async (req, res) => {
       .get()
 
     const query = q.toLowerCase()
-    const results = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((c: { name?: string; description?: string }) =>
-        c.name?.toLowerCase().includes(query) || c.description?.toLowerCase().includes(query)
-      )
+    type ChannelDoc = { id: string; name?: string; description?: string; [k: string]: unknown }
+    const results = (snap.docs.map((d) => ({ id: d.id, ...d.data() })) as ChannelDoc[]).filter(
+      (c) => c.name?.toLowerCase().includes(query) || c.description?.toLowerCase().includes(query)
+    )
 
     res.json(results)
   } catch (err) {
@@ -65,11 +64,10 @@ searchRouter.get('/users', requireAuth, async (req, res) => {
     const snap = await db().collection('users').get()
     const query = q.toLowerCase()
 
-    const results = snap.docs
-      .map((d) => ({ uid: d.id, ...d.data() }))
-      .filter((u: { displayName?: string; email?: string }) =>
-        u.displayName?.toLowerCase().includes(query) || u.email?.toLowerCase().includes(query)
-      )
+    type UserDoc = { uid: string; displayName?: string; email?: string; [k: string]: unknown }
+    const results = (snap.docs.map((d) => ({ uid: d.id, ...d.data() })) as UserDoc[]).filter(
+      (u) => u.displayName?.toLowerCase().includes(query) || u.email?.toLowerCase().includes(query)
+    )
 
     res.json(results)
   } catch (err) {

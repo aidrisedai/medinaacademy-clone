@@ -82,7 +82,7 @@ export function Message({
 
   return (
     <div
-      className={`message-row ${showHeader ? 'pt-3' : ''}`}
+      className={`message-row group ${showHeader ? 'pt-3' : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => { setShowActions(false); setShowEmojiPicker(false); setShowMore(false) }}
     >
@@ -129,7 +129,7 @@ export function Message({
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full p-2 text-sm border border-brand-DEFAULT rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full p-2 text-sm border border-brand rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
                 rows={3}
                 autoFocus
               />
@@ -196,7 +196,7 @@ export function Message({
                       onClick={() => onReact(message.id, r.emoji)}
                       className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm border transition-all ${
                         r.userIds.includes(user?.uid ?? '')
-                          ? 'bg-brand-50 border-brand-200 text-brand-DEFAULT'
+                          ? 'bg-brand-50 border-brand-200 text-brand'
                           : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                       }`}
                     >

@@ -90,7 +90,7 @@ export function CreateChannelModal({ open, onClose }: Props) {
                 key={String(opt.value)}
                 className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                   isPrivate === opt.value
-                    ? 'border-brand-DEFAULT bg-brand-50'
+                    ? 'border-brand bg-brand-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
@@ -103,7 +103,7 @@ export function CreateChannelModal({ open, onClose }: Props) {
                 />
                 <opt.icon
                   size={18}
-                  className={isPrivate === opt.value ? 'text-brand-DEFAULT' : 'text-gray-500'}
+                  className={isPrivate === opt.value ? 'text-brand' : 'text-gray-500'}
                 />
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{opt.title}</p>

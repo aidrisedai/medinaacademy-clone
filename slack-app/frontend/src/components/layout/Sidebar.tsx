@@ -249,7 +249,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
                           <button
                             key={dm.id}
                             onClick={() => handleDMClick(dm)}
-                            className={`channel-item w-full ${currentDM?.id === dm.id ? 'bg-brand-DEFAULT text-white' : ''}`}
+                            className={`channel-item w-full ${currentDM?.id === dm.id ? 'bg-brand text-white' : ''}`}
                           >
                             <Avatar
                               src={dmUser.photoURL}
@@ -320,7 +320,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
                       setShowUserMenu(false)
                     }}
                     className={`w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 ${
-                      user?.status === opt.value ? 'font-semibold text-brand-DEFAULT' : 'text-gray-700'
+                      user?.status === opt.value ? 'font-semibold text-brand' : 'text-gray-700'
                     }`}
                   >
                     <span>{opt.emoji}</span>
@@ -364,7 +364,7 @@ function ChannelItem({
   return (
     <button
       onClick={onClick}
-      className={`channel-item w-full ${active ? 'bg-brand-DEFAULT text-white' : ''} ${dim ? 'opacity-50' : ''}`}
+      className={`channel-item w-full ${active ? 'bg-brand text-white' : ''} ${dim ? 'opacity-50' : ''}`}
     >
       {channel.isPrivate ? (
         <Lock size={14} className="flex-shrink-0" />
@@ -375,7 +375,7 @@ function ChannelItem({
         {channel.name}
       </span>
       {unread > 0 && !active && (
-        <span className="ml-auto bg-white text-brand-DEFAULT text-xs font-black rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+        <span className="ml-auto bg-white text-brand text-xs font-black rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
           {unread > 9 ? '9+' : unread}
         </span>
       )}
